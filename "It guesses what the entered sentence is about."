@@ -1,3 +1,91 @@
+
+You can follow the steps below to run this Python code. The code creates a text classification service, serves it as a web application using Flask, and makes it accessible over the internet with ngrok. Here’s a guide on how to execute it:
+
+### 1. Install the Dependencies
+The code relies on several libraries that need to be installed. To do this, run the following commands in your terminal:
+
+```bash
+pip install torch transformers flask pyngrok
+```
+
+- `torch`: The PyTorch library for machine learning.
+- `transformers`: For using Hugging Face’s DistilBERT model.
+- `flask`: To build the web application.
+- `pyngrok`: To expose your local server to the internet via ngrok.
+
+### 2. Prepare the Model
+The code specifies a model path as `model_path = "distilbert_newsgroup_model"`, which refers to a pre-trained DistilBERT model directory. You can obtain this model in one of two ways:
+
+- **If you have your own model**: Place the model files (e.g., `pytorch_model.bin`, `config.json`, `vocab.txt`) in a folder named `distilbert_newsgroup_model`.
+- **Download from Hugging Face**: If you don’t have a custom model, you can use a pre-trained model from Hugging Face. For example:
+
+```python
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+
+model_path = "distilbert-base-uncased"  # A general-purpose model
+tokenizer = DistilBertTokenizer.from_pretrained(model_path)
+model = DistilBertForSequenceClassification.from_pretrained(model_path, num_labels=20)  # For 20 categories
+```
+
+In this case, update the `model_path` variable in the code to `"distilbert-base-uncased"`. Note that this model may not perfectly match your categories unless it’s fine-tuned for them.
+
+### 3. Set Up the Ngrok Token
+To make your local server accessible online via ngrok, you need an authentication token. Follow these steps:
+
+1. Sign up at [ngrok.com](https://ngrok.com/) and get your auth token.
+2. Set it as an environment variable in your terminal:
+
+```bash
+export NGROK_AUTH_TOKEN="your_ngrok_token"
+```
+
+Alternatively, you can hardcode the token in the script (not recommended for security reasons):
+
+```python
+NGROK_AUTH_TOKEN = "your_ngrok_token"
+```
+
+### 4. Run the Code
+Once the dependencies are installed and the model is ready, you can execute the code:
+
+1. Save the code to a file (e.g., `app.py`).
+2. Open a terminal, navigate to the directory containing the file, and run:
+
+```bash
+python app.py
+```
+
+- The app will start running on `http://localhost:5000`.
+- If ngrok connects successfully, you’ll see a public URL (e.g., `https://abc123.ngrok.io`) in the terminal.
+
+### 5. Test the Service
+- **Home Page**: Open `http://localhost:5000` or the ngrok URL in your browser to see the message "Text Classification Service is Running."
+- **Make a Prediction**: Use the `/predict` endpoint by sending a POST request. For example, with `curl`:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"text":"This is a test sentence about space exploration"}' http://localhost:5000/predict
+```
+
+Or with Python:
+
+```python
+import requests
+
+url = "http://localhost:5000/predict"
+data = {"text": "This is a test sentence about space exploration"}
+response = requests.post(url, json=data)
+print(response.json())
+```
+
+The response will show the predicted categories and their probabilities.
+
+### 6. Troubleshooting
+- **Error: Model not found**: If `model_path` is invalid, ensure it points to a valid model directory or use a Hugging Face model name.
+- **Ngrok not working**: Verify your token and internet connection.
+- **CUDA errors**: If you don’t have a GPU, the code will fall back to CPU automatically, but you can check with `torch.cuda.is_available()`.
+- **Port conflict**: If port 5000 is in use, change it in the code (e.g., `app.run(port=5001)`).
+
+-------------------------------------------------------------------------------------------------------------------
 import os
 import torch
 import flask
